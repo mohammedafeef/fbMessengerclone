@@ -1,38 +1,59 @@
-import React, { useEffect } from 'react';
+import React, {  useState,useEffect } from 'react';
 import TextField from "@material-ui/core/TextField";
-import { makeStyles } from '@material-ui/core/styles';
+import Button from "@material-ui/core/Button";
+import Message from "./Components/Message";
+import {v4 as uuid} from 'uuid';
 import './App.css';
+import { makeStyles } from '@material-ui/core';
 
-const usestyle = makeStyles((theme)=>{
-  root:{
-    width:'80%',
-    height:'100%',
-    color:"blue"
-
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    '& > *': {
+      fontSize:"1.5rem",
+      margin:theme.spacing(1)
+    },
   },
-  button:{
-    flex:1,
-    width:20%,
-    height:100%,
-    color:'lightgray'
+  highsize: {
+    '& > *': {
+      fontsize:"2rem"
+    }
   }
-})
-function App() {
-  const [message,setmessage] = useEffect()
-  const [messages,setmessages] = useEffect([])
+}));
+const App = () => {
+  const [username ,setUsername] = useState('')
+  useEffect(() =>{
+    setUsername(prompt("enter your name?"))
+  },[])
+  const classes = useStyles()
+  const [message,setmessage] = useState('')
+  const [messages,setmessages] = useState([
+    {
+      username:"afeef",
+      message:"hai"
+    }
+  ])
   const onTextInput = (e) =>{
     setmessage(e.target.value)
   }
-  const addMessage = (data) =>{
-    setmessages((pre)=>{
+  const addMessage = () =>{
+    (message == "")?(alert("it's an empty string :(")):(
+      setmessages((pre)=>{
       return([        
         ...pre,
-        message
+        {
+          message,
+          username
+        }
       ]
       )
     })
+    )
+    setmessage("")
+    console.log(messages);
   }
-  classes = usestyle()
+  // classes = usestyle()
   return (
     <>
     <div className="full-container">
@@ -40,16 +61,27 @@ function App() {
       <h3>Messenger</h3>
     </header>
     <div className="content">
+    {
+      messages.map((messageItem)=>{
+        return(<Message username = {messageItem.username}msg={messageItem.message} key={uuid()}/>)
+      })
+    }
 
     </div>
-    <div className="message-box">
+    <div className={`message-box ${classes.root}`}>
       <TextField 
       id="standard-basic" 
       label="send message" 
       name="message"
       value={message}
       onChange={onTextInput}
+      className = {classes.highsize}
       />
+      <Button 
+      variant="outlined" 
+      size="small"
+      onClick={addMessage}
+      >send</Button>
     </div>
     </div>
     </>
