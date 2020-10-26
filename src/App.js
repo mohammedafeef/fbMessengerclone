@@ -5,6 +5,8 @@ import Message from "./Components/Message";
 import {v4 as uuid} from 'uuid';
 import './App.css';
 import { makeStyles } from '@material-ui/core';
+import firebase from "firebase";
+import db from "./Components/firebase";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,42 +18,47 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   highsize: {
-    '& > *': {
-      fontsize:"2rem"
-    }
+    fontSize:"1.6rem"
   }
 }));
 const App = () => {
+  const currentdate= new Date()
+  const [message,setmessage] = useState('')
+  const [messages,setmessages] = useState([''])
   const [username ,setUsername] = useState('')
   useEffect(() =>{
     setUsername(prompt("enter your name?"))
+    db.collection('messages').orderBy("timestamps", "desc").onSnapshot((snapshot)=>{
+      console.log(snapshot.docs.map((doc)=>doc.data()))
+    setmessages(snapshot.docs.map((doc)=>({id:doc.id,message:doc.data().message,username:doc.data().username,date:doc.data().date})   ))
+  })
   },[])
   const classes = useStyles()
-  const [message,setmessage] = useState('')
-  const [messages,setmessages] = useState([
-    {
-      username:"afeef",
-      message:"hai"
-    }
-  ])
+
   const onTextInput = (e) =>{
     setmessage(e.target.value)
   }
   const addMessage = () =>{
     (message == "")?(alert("it's an empty string :(")):(
-      setmessages((pre)=>{
-      return([        
-        ...pre,
+      db.collection('messages').add(
         {
           message,
-          username
+          username,
+          timestamps:firebase.firestore.FieldValue.serverTimestamp(),
+          date:`${currentdate.getDate()}-${currentdate.getMonth()+1}-${currentdate.getFullYear()}`
         }
-      ]
-      )
-    })
+
+    )
+    )
+    console.log(
+      {
+        message,
+        username,
+        timestamps:firebase.firestore.FieldValue.serverTimestamp(),
+        date:`${currentdate.getDate()}-${currentdate.getMonth()+1}-${currentdate.getFullYear()}`
+      }
     )
     setmessage("")
-    console.log(messages);
   }
   // classes = usestyle()
   return (
@@ -63,20 +70,26 @@ const App = () => {
     <div className="content">
     {
       messages.map((messageItem)=>{
-        return(<Message username = {messageItem.username}msg={messageItem.message} key={uuid()}/>)
+        return(<Message username = {messageItem.username} msg={messageItem.message} usernameC={username} date = {messageItem.date}key={uuid()}/>)
       })
     }
 
     </div>
     <div className={`message-box ${classes.root}`}>
+      <div className = {classes.highsize}>
       <TextField 
       id="standard-basic" 
       label="send message" 
       name="message"
       value={message}
       onChange={onTextInput}
-      className = {classes.highsize}
+      InputProps={{
+            classes: {
+              input: classes.highsize,
+            },
+          }}
       />
+      </div>
       <Button 
       variant="outlined" 
       size="small"
